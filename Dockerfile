@@ -10,14 +10,14 @@ RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
 # as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
-ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt ~/
+ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
 
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
 RUN pip install virtualenv
 
 RUN virtualenv --python=python2 --no-site-packages venv
 RUN /bin/bash -c "source venv/bin/activate"
-RUN pip install -r ~/requirements.txt
+RUN pip install -r /opt/requirements.txt
 RUN pip freeze
 
 # next we'll add java to our image.. unfortunately, Oracle prevents their Java distributions
@@ -43,5 +43,5 @@ ADD http://mirror.metrocast.net/apache/ant/binaries/apache-ant-1.10.1-bin.zip /u
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file
-COPY resources/merge_junit_results.py ~/
+COPY resources/merge_junit_results.py /opt
 

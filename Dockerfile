@@ -19,10 +19,6 @@ ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
 RUN pip install virtualenv
 
-RUN virtualenv --python=python2 --no-site-packages venv
-RUN /bin/bash -c "source venv/bin/activate"
-RUN pip install -r /opt/requirements.txt
-RUN pip freeze
 
 # next we'll add java to our image.. unfortunately, Oracle prevents their Java distributions
 # from being included into a Docker image due to a provision in their license that the 
@@ -54,7 +50,15 @@ RUN apt-get install sudo && \
     echo "cassandra ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/cassandra && \
     chmod 0440 /etc/sudoers.d/cassandra
 
+# switch to the cassandra user... we are all done running things as root
 USER cassandra
+
+# run pip commands and setup virtualenv (note we do this after we switch to cassandra user so we 
+# setup the virtualenv for the cassandrauser and not the root user by acident)
+RUN virtualenv --python=python2 --no-site-packages venv
+RUN /bin/bash -c "source venv/bin/activate"
+RUN pip install -r /opt/requirements.txt
+RUN pip freeze
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file

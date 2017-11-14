@@ -7,6 +7,9 @@ RUN apt-get update
 # install our python depenedncies and some other stuff we need
 RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
 
+# stop pip from bitching that it's out of date - looks like LTS is still publishing 8.1.1 as latest
+RUN pip install --upgrade pip
+
 # as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest

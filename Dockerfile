@@ -15,6 +15,7 @@ RUN pip install --upgrade pip
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
 ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
+RUN chmod 0644 /opt/requirements.txt
 
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
 RUN pip install virtualenv
@@ -49,18 +50,29 @@ RUN apt-get install sudo && \
     echo "cassandra ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/cassandra && \
     chmod 0440 /etc/sudoers.d/cassandra
 
+# fix up permissions on the cassandra home dir
+RUN chown -R cassandra:cassandra /home/cassandra
+
 # switch to the cassandra user... we are all done running things as root
 USER cassandra
+ENV HOME /home/cassandra
+WORKDIR /home/cassandra
+
+# Add enviornment variables for Ant and Java and add them to the PATH
+RUN echo 'export ANT_HOME=/usr/local/apache-ant-1.10.1' >> /home/cassandra/.bashrc
+RUN echo 'export JAVA_HOME=/usr/local/openjdk8u154-cassandra-b02' >> /home/cassandra/.bashrc
+RUN echo 'export PATH=$PATH:$ANT_HOME/bin:$JAVA_HOME/bin' >> /home/cassandra/.bashrc
 
 # run pip commands and setup virtualenv (note we do this after we switch to cassandra user so we 
 # setup the virtualenv for the cassandrauser and not the root user by acident)
-RUN virtualenv --python=python2 --no-site-packages /opt/venv
-RUN su cassandra /bin/bash -c "source /opt/venv/bin/activate"
-RUN pip install -r /opt/requirements.txt
-RUN pip freeze
+RUN virtualenv --python=python2 --no-site-packages env
+RUN chmod +x env/bin/activate
+RUN env/bin/activate
+RUN pip install --user -r /opt/requirements.txt
+RUN pip freeze --user
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file
 COPY resources/merge_junit_results.py /opt
-
+RUN sudo chown cassandra:cassandra /opt/merge_junit_results.py
 

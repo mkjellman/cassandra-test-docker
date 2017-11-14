@@ -1,5 +1,6 @@
 # base things off the latest LTS Ubuntu Release (16.04)
 FROM ubuntu:16.04
+MAINTAINER Michael Kjellman <kjellman@apple.com>
 
 # do base updates via apt for whatever is already installed
 RUN apt-get update
@@ -46,7 +47,16 @@ ADD http://www-us.apache.org/dist/ant/binaries/apache-ant-1.10.1-bin.tar.gz /tmp
 RUN tar -zxvf /tmp/apache-ant-1.10.1-bin.tar.gz -C /usr/local
 RUN rm /tmp/apache-ant-1.10.1-bin.tar.gz
 
+# setup our user -- if we don't do this docker will default to root and Cassandra will fail to start
+# as we appear to have a check that the user isn't starting Cassandra as root
+RUN apt-get install sudo && \
+    adduser --disabled-password --gecos "" cassandra && \
+    echo "user ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/cassandra && \
+    chmod 0440 /etc/sudoers.d/cassandra
+USER cassandra
+
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file
 COPY resources/merge_junit_results.py /opt
+
 

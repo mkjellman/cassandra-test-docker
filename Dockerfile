@@ -11,11 +11,6 @@ RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
 # stop pip from bitching that it's out of date - looks like LTS is still publishing 8.1.1 as latest
 RUN pip install --upgrade pip
 
-# as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
-# so we can avoid needing to clone the entire repo just to get this file
-# RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
-ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
-
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
 RUN pip install virtualenv
 
@@ -51,6 +46,11 @@ RUN apt-get install sudo && \
 
 # switch to the cassandra user... we are all done running things as root
 USER cassandra
+
+# as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
+# so we can avoid needing to clone the entire repo just to get this file
+# RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
+ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
 
 # install all of the dtest specific dependencies we need for python via pip
 # we're not using virtualenv here as we're already in the docker container

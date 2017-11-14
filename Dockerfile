@@ -42,7 +42,7 @@ RUN tar -zxvf /tmp/openjdk8u154-cassandra-b02.tar.gz -C /usr/local
 RUN rm /tmp/openjdk8u154-cassandra-b02.tar.gz
 
 # get Ant 1.10.1 (explicitly downloading it cuz who know's what version is in the apt repo)
-COPY http://apache.mirrors.pair.com/ant/binaries/apache-ant-1.10.1-bin.tar.gz /tmp/
+ADD http://apache.mirrors.pair.com/ant/binaries/apache-ant-1.10.1-bin.tar.gz /tmp/
 RUN tar -zxvf /tmp/apache-ant-1.10.1-bin.tar.gz -C /usr/local
 RUN rm /tmp/apache-ant-1.10.1-bin.tar.gz
 

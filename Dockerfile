@@ -51,8 +51,9 @@ RUN rm /tmp/apache-ant-1.10.1-bin.tar.gz
 # as we appear to have a check that the user isn't starting Cassandra as root
 RUN apt-get install sudo && \
     adduser --disabled-password --gecos "" cassandra && \
-    echo "user ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/cassandra && \
+    echo "cassandra ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/cassandra && \
     chmod 0440 /etc/sudoers.d/cassandra
+
 USER cassandra
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 

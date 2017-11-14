@@ -55,8 +55,8 @@ USER cassandra
 
 # run pip commands and setup virtualenv (note we do this after we switch to cassandra user so we 
 # setup the virtualenv for the cassandrauser and not the root user by acident)
-RUN virtualenv --python=python2 --no-site-packages venv
-RUN /bin/bash -c "source venv/bin/activate"
+RUN virtualenv --python=python2 --no-site-packages /opt/venv
+RUN /bin/bash -c "source /opt/venv/bin/activate"
 RUN pip install -r /opt/requirements.txt
 RUN pip freeze
 

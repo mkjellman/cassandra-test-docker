@@ -52,10 +52,10 @@ RUN apt-get install sudo && \
 # switch to the cassandra user... we are all done running things as root
 USER cassandra
 
-# run pip commands and setup virtualenv (note we do this after we switch to cassandra user so we 
-# setup the virtualenv for the cassandrauser and not the root user by acident)
-RUN virtualenv --python=python2 --no-site-packages /opt/venv
-RUN su cassandra /bin/bash -c "source /opt/venv/bin/activate"
+# install all of the dtest specific dependencies we need for python via pip
+# we're not using virtualenv here as we're already in the docker container
+# and we only will ever have one python config here! (and i can't get
+# virtualenv working correctly with the non-root user inside the docker container
 RUN pip install -r /opt/requirements.txt
 RUN pip freeze
 

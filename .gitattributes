@@ -1,0 +1,2 @@
+resources/openjdk8u154-cassandra-b02.tar.gz filter=lfs diff=lfs merge=lfs -text
+resources/openjdk7u82-cassandra-b02.tar.gz filter=lfs diff=lfs merge=lfs -text

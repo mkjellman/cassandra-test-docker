@@ -8,7 +8,7 @@ RUN pip install virtualenv
 RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
 
 RUN virtualenv --python=python2 --no-site-packages venv
-RUN source venv/bin/activate
+RUN /bin/bash -c "source venv/bin/activate"
 RUN pip install -r ~/cassandra-dtest/requirements.txt
 RUN pip freeze
 

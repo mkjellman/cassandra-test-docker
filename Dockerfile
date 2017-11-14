@@ -42,7 +42,9 @@ RUN tar -zxvf /tmp/openjdk8u154-cassandra-b02.tar.gz -C /usr/local
 RUN rm /tmp/openjdk8u154-cassandra-b02.tar.gz
 
 # get Ant 1.10.1 (explicitly downloading it cuz who know's what version is in the apt repo)
-ADD http://mirror.metrocast.net/apache/ant/binaries/apache-ant-1.10.1-bin.zip /usr/local
+COPY http://apache.mirrors.pair.com/ant/binaries/apache-ant-1.10.1-bin.tar.gz /tmp/
+RUN tar -zxvf /tmp/apache-ant-1.10.1-bin.tar.gz -C /usr/local
+RUN rm /tmp/apache-ant-1.10.1-bin.tar.gz
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file

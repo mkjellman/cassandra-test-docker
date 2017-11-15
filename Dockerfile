@@ -8,6 +8,9 @@ RUN apt-get update
 # install our python depenedncies and some other stuff we need
 RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
 
+# solves warning: "jemalloc shared library could not be preloaded to speed up memory allocations"
+RUN apt-get update && apt-get install -y --no-install-recommends libjemalloc1 && rm -rf /var/lib/apt/lists/*
+
 # stop pip from bitching that it's out of date - looks like LTS is still publishing 8.1.1 as latest
 RUN pip install --upgrade pip
 
@@ -67,9 +70,7 @@ RUN echo 'export PATH=$PATH:$ANT_HOME/bin:$JAVA_HOME/bin' >> /home/cassandra/.ba
 # setup the virtualenv for the cassandrauser and not the root user by acident)
 RUN virtualenv --python=python2 --no-site-packages env
 RUN chmod +x env/bin/activate
-RUN env/bin/activate
-RUN pip install --user -r /opt/requirements.txt
-RUN pip freeze --user
+RUN /bin/bash -c "source ~/env/bin/activate && pip install -r /opt/requirements.txt && pip freeze --user"
 
 # add our python script we use to merge all the individual .xml files genreated by surefire 
 # from the unit tests and nosetests for the dtests into a single consolidated test results file

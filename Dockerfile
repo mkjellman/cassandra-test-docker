@@ -9,7 +9,7 @@ RUN apt-get update
 RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
 
 # solves warning: "jemalloc shared library could not be preloaded to speed up memory allocations"
-RUN apt-get update && apt-get install -y --no-install-recommends libjemalloc1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y --no-install-recommends libjemalloc1
 
 # stop pip from bitching that it's out of date - looks like LTS is still publishing 8.1.1 as latest
 RUN pip install --upgrade pip

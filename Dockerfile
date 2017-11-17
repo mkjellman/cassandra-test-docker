@@ -77,3 +77,17 @@ RUN /bin/bash -c "source ~/env/bin/activate && pip install -r /opt/requirements.
 COPY resources/merge_junit_results.py /opt
 RUN sudo chown cassandra:cassandra /opt/merge_junit_results.py
 
+# we need to make SSH less strict to prevent various dtests from failing when they attempt to
+# git clone a given commit/tag/etc
+# upgrading node1 to github:apache/18cdd391ec27d16daf775f928902f5a421c415e3
+# git@github.com:apache/cassandra.git github:apache/18cdd391ec27d16daf775f928902f5a421c415e3
+# 23:47:08,993 ccm INFO Cloning Cassandra...
+# The authenticity of host 'github.com (192.30.253.112)' can't be established.
+# RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
+# Are you sure you want to continue connecting (yes/no)? 
+RUN mkdir ~/.ssh
+RUN echo 'Host *\n UserKnownHostsFile /dev/null\n StrictHostKeyChecking no' > ~/.ssh/config
+RUN chown cassandra:cassandra ~/.ssh
+RUN chown cassandra:cassandra ~/.ssh/config
+RUN chmod 600 ~/.ssh/config
+

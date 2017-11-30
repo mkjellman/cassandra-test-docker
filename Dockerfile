@@ -91,3 +91,6 @@ RUN chown cassandra:cassandra ~/.ssh
 RUN chown cassandra:cassandra ~/.ssh/config
 RUN chmod 600 ~/.ssh/config
 
+# hack to make ipprefix configurable in ccm as an env variable
+COPY resources/cluster.py.diff /home/cassandra
+RUN (cd / && patch -p0) < /home/cassandra/cluster.py.diff

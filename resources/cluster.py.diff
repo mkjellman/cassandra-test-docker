@@ -1,0 +1,20 @@
+--- /home/cassandra/env/lib/python2.7/site-packages/ccmlib/cluster.py	2017-11-17 02:52:52.000000000 +0000
++++ cluster.py	2017-11-30 23:57:15.459993904 +0000
+@@ -236,6 +236,8 @@
+         node_count = nodes
+         dcs = []
+ 
++        IP_PREFIX = os.environ.get('IP_PREFIX', '127.0.0.')
++
+         self.use_vnodes = use_vnodes
+         if isinstance(nodes, list):
+             self.set_configuration_options(values={'endpoint_snitch': 'org.apache.cassandra.locator.PropertyFileSnitch'})
+@@ -261,7 +263,7 @@
+                 tokens = self.balanced_tokens_across_dcs(dcs)
+ 
+         if not ipformat:
+-            ipformat = ipprefix + "%d"
++            ipformat = IP_PREFIX + "%d"
+ 
+         for i in xrange(1, node_count + 1):
+             tk = None

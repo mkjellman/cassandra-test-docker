@@ -3,25 +3,44 @@ FROM ubuntu:16.04
 MAINTAINER Michael Kjellman <kjellman@apple.com>
 
 # do base updates via apt for whatever is already installed
-RUN apt-get update
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update
 
+# need to add apt repo with ubuntu 3.6 as it's not available by default
+# in the stock ubuntu 16.04 apt repos (seems a questionable python 3.5 is all you get)
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common
+RUN add-apt-repository ppa:jonathonf/python-3.6
+ 
 # install our python depenedncies and some other stuff we need
-RUN apt-get install -y git-core python python-pip python-dev net-tools vim man
+# libev4 libev-dev are for the python driver
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install -y git-core python2.7 python3.6 python3.6-venv python3.6-dev net-tools vim man libev4 libev-dev wget gcc
 
 # solves warning: "jemalloc shared library could not be preloaded to speed up memory allocations"
 RUN apt-get install -y --no-install-recommends libjemalloc1
 
-# stop pip from bitching that it's out of date - looks like LTS is still publishing 8.1.1 as latest
-RUN pip install --upgrade pip
+# because we're using ubuntu 16.04 lts, there isn't a pip module for python 3.6 in apt
+# we need to bootstrap it ourselves manually
+RUN wget https://bootstrap.pypa.io/get-pip.py
+RUN python3.6 get-pip.py
+RUN rm -f /usr/local/bin/python3
+RUN rm -f /usr/local/bin/pip3
+RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3
+RUN ln -s /usr/local/bin/pip /usr/local/bin/pip3
 
 # as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
-ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
+# ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
+ADD https://raw.githubusercontent.com/mkjellman/cassandra-dtest/dtests_on_pytest/requirements.txt /opt
 RUN chmod 0644 /opt/requirements.txt
 
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
-RUN pip install virtualenv
+RUN pip3 install virtualenv
+RUN pip3 install --upgrade wheel
 
 # next we'll add java to our image.. unfortunately, Oracle prevents their Java distributions
 # from being included into a Docker image due to a provision in their license that the 
@@ -68,14 +87,9 @@ RUN echo 'export PATH=$PATH:$ANT_HOME/bin:$JAVA_HOME/bin' >> /home/cassandra/.ba
 
 # run pip commands and setup virtualenv (note we do this after we switch to cassandra user so we 
 # setup the virtualenv for the cassandrauser and not the root user by acident)
-RUN virtualenv --python=python2 --no-site-packages env
+RUN virtualenv --python=python3.6 --no-site-packages env
 RUN chmod +x env/bin/activate
-RUN /bin/bash -c "source ~/env/bin/activate && pip install -r /opt/requirements.txt && pip freeze --user"
-
-# add our python script we use to merge all the individual .xml files genreated by surefire 
-# from the unit tests and nosetests for the dtests into a single consolidated test results file
-COPY resources/merge_junit_results.py /opt
-RUN sudo chown cassandra:cassandra /opt/merge_junit_results.py
+RUN /bin/bash -c "source ~/env/bin/activate && pip3.6 install -r /opt/requirements.txt && pip3.6 freeze --user"
 
 # we need to make SSH less strict to prevent various dtests from failing when they attempt to
 # git clone a given commit/tag/etc
@@ -91,6 +105,3 @@ RUN chown cassandra:cassandra ~/.ssh
 RUN chown cassandra:cassandra ~/.ssh/config
 RUN chmod 600 ~/.ssh/config
 
-# hack to make ipprefix configurable in ccm as an env variable
-COPY resources/cluster.py.diff /home/cassandra
-RUN (cd / && patch -p0) < /home/cassandra/cluster.py.diff

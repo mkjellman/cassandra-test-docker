@@ -106,5 +106,5 @@ RUN chown cassandra:cassandra ~/.ssh/config
 RUN chmod 600 ~/.ssh/config
 
 # apply patch to ccm with python 3 compat fixes not yet fixed upstream
-COPY resources/ccm_node.py.py3.diff /tmp/
-RUN (cd / && patch -p0) < /tmp/ccm_node.py.py3.diff
+COPY resources/ccm_node.py.py3.diff /opt/
+RUN (cd / && patch -p0) < /opt/ccm_node.py.py3.diff

@@ -35,7 +35,7 @@ RUN ln -s /usr/local/bin/pip /usr/local/bin/pip3
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
 # ADD https://raw.githubusercontent.com/apache/cassandra-dtest/master/requirements.txt /opt
-ADD https://raw.githubusercontent.com/mkjellman/cassandra-dtest/dtests_on_pytest/requirements.txt /opt
+ADD https://raw.githubusercontent.com/mkjellman/cassandra-dtest/dtests_on_pytest_v2/requirements.txt /opt
 RUN chmod 0644 /opt/requirements.txt
 
 # now setup python via viraualenv with all of the python dependencies we need according to requirements.txt
@@ -49,21 +49,20 @@ RUN pip3 install --upgrade wheel
 # OpenJDK Mercurial branches. I did this because it's always a box of chocolates when
 # you take other random OpenJDK builds from apt repos/the web -- so with these I know exactly
 # what they were built off of and I have confidence that C* will run cleanly with these builds.
- 
-# upgrade dtests still run C* 2.0 which needs JDK7, so yes, we need a JDK7 build still 
-COPY resources/openjdk7u82-cassandra-b02.tar.gz /tmp/
-RUN tar -zxvf /tmp/openjdk7u82-cassandra-b02.tar.gz -C /usr/local
-RUN rm /tmp/openjdk7u82-cassandra-b02.tar.gz
+
+# upgrade dtests still run C* 2.0 which needs JDK7, so yes, we need a JDK7 build still
+ADD resources/openjdk7u82-cassandra-b02.tar.gz /usr/local 
 
 # openjdk 8
-COPY resources/openjdk8u154-cassandra-b02.tar.gz /tmp/
-RUN tar -zxvf /tmp/openjdk8u154-cassandra-b02.tar.gz -C /usr/local
-RUN rm /tmp/openjdk8u154-cassandra-b02.tar.gz
+ADD resources/openjdk8u154-cassandra-b02.tar.gz /usr/local
 
 # get Ant 1.10.1 (explicitly downloading it cuz who know's what version is in the apt repo)
-ADD http://www-us.apache.org/dist/ant/binaries/apache-ant-1.10.1-bin.tar.gz /tmp/
-RUN tar -zxvf /tmp/apache-ant-1.10.1-bin.tar.gz -C /usr/local
-RUN rm /tmp/apache-ant-1.10.1-bin.tar.gz
+# due to the way ADD works in docker right now, we have to specify a .tar.gz artifact in git
+# and can't specify the url (ADD with a url will just essentially do what COPY does and put
+# the unexpanded tar.gz into the destination dir). But we don't want to use COPY as we can't
+# remove the file later from other layers.. so for now let's just check in a static copy
+# of the .tar.gz.. sigh
+ADD resources/apache-ant-1.10.1-bin.tar.gz /usr/local
 
 # setup our user -- if we don't do this docker will default to root and Cassandra will fail to start
 # as we appear to have a check that the user isn't starting Cassandra as root
@@ -89,7 +88,7 @@ RUN echo 'export PATH=$PATH:$ANT_HOME/bin:$JAVA_HOME/bin' >> /home/cassandra/.ba
 # setup the virtualenv for the cassandrauser and not the root user by acident)
 RUN virtualenv --python=python3.6 --no-site-packages env
 RUN chmod +x env/bin/activate
-RUN /bin/bash -c "source ~/env/bin/activate && pip3.6 install -r /opt/requirements.txt && pip3.6 freeze --user"
+RUN /bin/bash -c "source ~/env/bin/activate && pip3.6 install Cython && pip3.6 install -r /opt/requirements.txt && pip3.6 freeze --user"
 
 # we need to make SSH less strict to prevent various dtests from failing when they attempt to
 # git clone a given commit/tag/etc
@@ -108,3 +107,9 @@ RUN chmod 600 ~/.ssh/config
 # apply patch to ccm with python 3 compat fixes not yet fixed upstream
 COPY resources/ccm_node.py.py3.diff /opt/
 RUN (cd / && patch -p0) < /opt/ccm_node.py.py3.diff
+
+# mark "/tmp" as a volume so it will get mounted as an ext4 mount and not 
+# the stupid aufs/CoW stuff that the actual docker container mounts will have.
+# we've been seeing 3+ minute hangs when calling sync on an aufs backed mount
+# so it greatly makes tests flaky as things can hang basically anywhere
+VOLUME ["/tmp"]

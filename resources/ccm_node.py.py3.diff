@@ -1,24 +1,33 @@
 --- /home/cassandra/env/src/ccm/ccmlib/node.py	2017-12-13 03:11:13.000000000 +0000
 +++ node.py	2017-12-19 09:51:49.083186951 +0000
-@@ -57,10 +57,10 @@
+@@ -57,10 +57,16 @@
          message = "Subprocess {} exited with non-zero status; exit status: {}".format(command, exit_status)
          if stdout:
              message += "; \nstdout: "
 -            message += stdout
-+            message += stdout.decode("utf-8")
++            if isinstance(stdout, str):
++                message += stdout
++            else:
++                message += stdout.decode("utf-8")
          if stderr:
              message += "; \nstderr: "
 -            message += stderr
-+            message += stderr.decode("utf-8")
++            if isinstance(stderr, str):
++                message += stderr
++            else:
++                message += stderr.decode("utf-8")
  
          Exception.__init__(self, message)
  
-@@ -2009,7 +2009,7 @@
+@@ -2009,7 +2015,10 @@
  
          out, _, _ = handle_external_tool_process(p, ["sstableutil", '--type', 'final', ks, table])
  
 -        return sorted(filter(lambda s: s.endswith('-Data.db'), out.splitlines()))
-+        return sorted(filter(lambda s: s.endswith('-Data.db'), out.decode("utf-8").splitlines()))
++        if isinstance(out, str):
++            return sorted(filter(lambda s: s.endswith('-Data.db'), out.splitlines()))
++        else:
++            return sorted(filter(lambda s: s.endswith('-Data.db'), out.decode("utf-8").splitlines()))
  
  
  def _get_load_from_info_output(info):

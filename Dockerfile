@@ -31,6 +31,9 @@ RUN rm -f /usr/local/bin/pip3
 RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3
 RUN ln -s /usr/local/bin/pip /usr/local/bin/pip3
 
+RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64.deb
+RUN dpkg -i dumb-init_1.2.1_amd64.deb
+
 # as we only need the requirements.txt file from the dtest repo, let's just get it from GitHub as a raw asset
 # so we can avoid needing to clone the entire repo just to get this file
 # RUN git clone --single-branch --depth 1 https://github.com/apache/cassandra-dtest.git ~/cassandra-dtest
@@ -103,10 +106,6 @@ RUN echo 'Host *\n UserKnownHostsFile /dev/null\n StrictHostKeyChecking no' > ~/
 RUN chown cassandra:cassandra ~/.ssh
 RUN chown cassandra:cassandra ~/.ssh/config
 RUN chmod 600 ~/.ssh/config
-
-# apply patch to ccm with python 3 compat fixes not yet fixed upstream
-COPY resources/ccm_node.py.py3.diff /opt/
-RUN (cd / && patch -p0) < /opt/ccm_node.py.py3.diff
 
 # mark "/tmp" as a volume so it will get mounted as an ext4 mount and not 
 # the stupid aufs/CoW stuff that the actual docker container mounts will have.
